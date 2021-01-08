@@ -148,16 +148,16 @@
             methods: {
                 gei_ye_suan: function () {
                     this.sbd = [];
-                    for (let line of this.all_od.trim().split('\n')) {
+                    for (line of this.all_od.trim().split('\n')) {
                         if (line[0] == '`') {
                             continue;
                         };
-                        od = line.split(' ');
+                        od = line.trim().split(' ');
                         if (line[0] == '#') {
                             now_kzd = new kzd(od[0], od[1], od[2], od[3], od[4]);
                         } else {
-                            if (line.length == 7) {
-                                vdfm = new dfm(90, 0, 0);
+                            if (od[7] == undefined) {
+                                vdfm = new dfm('90', '0', '0');
                             } else {
                                 vdfm = new dfm(od[7], od[8], od[9]);
                             }
@@ -169,15 +169,15 @@
                 },
                 gei_ye_cass: function () {
                     cass = '';
-                    for (let line of this.all_od.trim().split('\n')) {
+                    for (line of this.all_od.trim().split('\n')) {
                         if (line[0] == '`') {
                             continue;
                         };
-                        od = line.split(' ');
+                        od = line.trim().split(' ');
                         if (line[0] == '#') {
                             now_kzd = new kzd(od[0], od[1], od[2], od[3], od[4]);
                         } else {
-                            if (line.length == 7) {
+                            if (od[7] == undefined) {
                                 vdfm = new dfm(90, 0, 0);
                             } else {
                                 vdfm = new dfm(od[7], od[8], od[9]);
