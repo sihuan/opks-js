@@ -1,5 +1,7 @@
 # opks-js
 
+> 在这儿使用 https://opks.sakuya.love/
+
 ## 功能
 
 ### 1. 可以算出以下数据
