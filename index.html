@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-hans">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./static/css/mdui.min.css">
+    <script src="./static/js/mdui.min.js"></script>
+    <script src="./static/js/vue.js"></script>
+    <link rel="shortcut icon" href="./static/favicon.ico">
+    <title>来，测绘！</title>
+</head>
+
+<body class="mdui-theme-primary-teal mdui-theme-accent-teal">
+    <div class="mdui-toolbar mdui-color-teal-100" style="margin-bottom:50px">
+        <div class="mdui-toolbar-spacer"></div>
+        <span class="mdui-typo-title">来，测绘！</span>
+        <div class="mdui-toolbar-spacer"></div>
+    </div>
+    <div id="app" class="mdui-container">
+        <div class="mdui-row">
+            <div class="mdui-col-12">
+                <div class="mdui-card" style="padding: 10px;">
+                    <div class="mdui-table">
+                        <table class="mdui-table">
+                            <thead>
+                                <tr>
+                                    <th>碎步点</th>
+                                    <th>所属控制点</th>
+                                    <th>斜距</th>
+                                    <th>平距</th>
+                                    <th>高差</th>
+                                    <th>坐标x</th>
+                                    <th>坐标y</th>
+                                    <th>坐标z</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="item in sbd">
+                                    <td>
+                                        {{ item[0] }}
+                                    </td>
+                                    <td>
+                                        {{ item[1] }}
+                                    </td>
+                                    <td>
+                                        {{ item[2] }}
+                                    </td>
+                                    <td>
+                                        {{ item[3] }}
+                                    </td>
+                                    <td>
+                                        {{ item[4] }}
+                                    </td>
+                                    <td>
+                                        {{ item[5] }}
+                                    </td>
+                                    <td>
+                                        {{ item[6] }}
+                                    </td>
+                                    <td>
+                                        {{ item[7] }}
+                                    </td>
+                                    <td>
+                                        {{ item[8] }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mdui-textfield mdui-textfield-floating-label">
+                        <label class="mdui-textfield-label">原始数据</label>
+                        <textarea v-model="all_od" class="mdui-textfield-input"></textarea>
+                    </div>
+                    <div class="mdui-card-actions">
+                        <button @click="gei_ye_suan()" class="mdui-btn mdui-ripple">给爷算</button>
+                        <button @click="gei_ye_cass()" class="mdui-btn mdui-ripple">给爷 CASS</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class dfm {
+            constructor(de, mi, se) {
+                this.de = Number(de);
+                this.mi = Number(mi);
+                this.se = Number(se);
+            };
+            sjz() {
+                return this.de + this.mi / 60 + this.se / 3600
+            }
+        };
+        class kzd {
+            constructor(dianhao, x, y, z, i) {
+                this.dianhao = dianhao;
+                this.x = Number(x);
+                this.y = Number(y);
+                this.z = Number(z);
+                this.i = Number(i);
+            }
+        };
+        class sbd {
+            constructor(dianhao, ss, zs, xs, hdfm, vdfm, kzd) {
+                this.dianhao = dianhao;
+                this.kzd = kzd;
+                this.alpha = hdfm.sjz() * (Math.PI / 180);
+                this.delta = (90 - vdfm.sjz()) * (Math.PI / 180);
+                this.l = 100 * Math.abs(Number(ss) - Number(xs)) * (Math.cos(this.delta) ** 2) / 1000
+                // # 碎步点的 x
+                this.x = kzd.x + this.l * Math.cos(this.alpha)
+                // # 碎步点的 y
+                this.y = kzd.y + this.l * Math.sin(this.alpha)
+                // # 碎步点的 z
+                this.z = kzd.z + this.l * Math.tan(this.delta) + kzd.i - Number(zs) / 1000
+                // # 高差
+                this.dh = this.z - kzd.z
+
+                // # 斜距
+                this.xj = Math.sqrt(this.dh ** 2 + this.l ** 2)
+            };
+            for_gys() {
+                return [this.dianhao, this.kzd.dianhao, this.xj.toFixed(3), this.l.toFixed(3), this.dh.toFixed(3), this.x.toFixed(3), this.y.toFixed(3), this.z.toFixed(3)]
+            };
+            for_gyc() {
+                return this.dianhao + ',,' + this.y.toFixed(3) + ',' + this.x.toFixed(3) + ',' + this.z.toFixed(3) + '\n';
+            };
+        };
+        function download(filename, text) {
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
+        };
+        app = new Vue({
+            el: "#app",
+            data: {
+                sbd: [],
+                all_od: '',
+            },
+            methods: {
+                gei_ye_suan: function () {
+                    this.sbd = [];
+                    for (let line of this.all_od.trim().split('\n')) {
+                        if (line[0] == '`') {
+                            continue;
+                        };
+                        od = line.split(' ');
+                        if (line[0] == '#') {
+                            now_kzd = new kzd(od[0], od[1], od[2], od[3], od[4]);
+                        } else {
+                            if (line.length == 7) {
+                                vdfm = new dfm(90, 0, 0);
+                            } else {
+                                vdfm = new dfm(od[7], od[8], od[9]);
+                            }
+                            hdfm = new dfm(od[4], od[5], od[6]);
+                            now_sbd = new sbd(od[0], od[1], od[2], od[3], hdfm, vdfm, now_kzd);
+                            this.sbd.push(now_sbd.for_gys())
+                        };
+                    };
+                },
+                gei_ye_cass: function () {
+                    cass = '';
+                    for (let line of this.all_od.trim().split('\n')) {
+                        if (line[0] == '`') {
+                            continue;
+                        };
+                        od = line.split(' ');
+                        if (line[0] == '#') {
+                            now_kzd = new kzd(od[0], od[1], od[2], od[3], od[4]);
+                        } else {
+                            if (line.length == 7) {
+                                vdfm = new dfm(90, 0, 0);
+                            } else {
+                                vdfm = new dfm(od[7], od[8], od[9]);
+                            }
+                            hdfm = new dfm(od[4], od[5], od[6]);
+                            now_sbd = new sbd(od[0], od[1], od[2], od[3], hdfm, vdfm, now_kzd);
+                            cass += now_sbd.for_gyc();
+                        };
+                    };
+                    console.log(cass);
+                    download("cass.dat", cass);
+                },
+            },
+        })
+    </script>
+</body>
+
+</html>
