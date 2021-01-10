@@ -73,10 +73,12 @@
                         <textarea v-model="all_od" class="mdui-textfield-input"></textarea>
                     </div>
                     <div class="mdui-card-actions">
-                        <button @click="gei_ye_suan()" class="mdui-btn mdui-ripple">给爷算</button>
-                        <button @click="gei_ye_cass()" class="mdui-btn mdui-ripple">给爷 CASS</button>
+                        <button @click="gei_ye('suan')" class="mdui-btn mdui-ripple">给爷算</button>
+                        <button @click="gei_ye('cass')" class="mdui-btn mdui-ripple">给爷 CASS</button>
                     </div>
                 </div>
+                <button onclick="window.location.href='./README.html'" class="mdui-btn mdui-m-t-3 mdui-center mdui-btn-raised mdui-color-pink mdui-ripple">README!
+                    查看使用指南.</button>
             </div>
         </div>
     </div>
@@ -146,13 +148,17 @@
                 all_od: '',
             },
             methods: {
-                gei_ye_suan: function () {
-                    this.sbd = [];
+                gei_ye: function (what) {
+                    if (what == 'suan') {
+                        this.sbd = [];
+                    } else if (what == 'cass') {
+                        cass = '';
+                    };
                     for (line of this.all_od.trim().split('\n')) {
                         if (line[0] == '`') {
                             continue;
                         };
-                        od = line.trim().split(' ');
+                        od = line.trim().split(/\s+/);
                         if (line[0] == '#') {
                             now_kzd = new kzd(od[0], od[1], od[2], od[3], od[4]);
                         } else {
@@ -163,32 +169,16 @@
                             }
                             hdfm = new dfm(od[4], od[5], od[6]);
                             now_sbd = new sbd(od[0], od[1], od[2], od[3], hdfm, vdfm, now_kzd);
-                            this.sbd.push(now_sbd.for_gys())
-                        };
-                    };
-                },
-                gei_ye_cass: function () {
-                    cass = '';
-                    for (line of this.all_od.trim().split('\n')) {
-                        if (line[0] == '`') {
-                            continue;
-                        };
-                        od = line.trim().split(' ');
-                        if (line[0] == '#') {
-                            now_kzd = new kzd(od[0], od[1], od[2], od[3], od[4]);
-                        } else {
-                            if (od[7] == undefined) {
-                                vdfm = new dfm(90, 0, 0);
-                            } else {
-                                vdfm = new dfm(od[7], od[8], od[9]);
+                            if (what == 'suan') {
+                                this.sbd.push(now_sbd.for_gys());
+                            } else if (what == 'cass') {
+                                cass += now_sbd.for_gyc();
                             }
-                            hdfm = new dfm(od[4], od[5], od[6]);
-                            now_sbd = new sbd(od[0], od[1], od[2], od[3], hdfm, vdfm, now_kzd);
-                            cass += now_sbd.for_gyc();
                         };
                     };
-                    console.log(cass);
-                    download("cass.dat", cass);
+                    if (what == 'cass') {
+                        download("cass.dat", cass);
+                    };
                 },
             },
         })
